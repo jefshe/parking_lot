@@ -12,6 +12,7 @@ use core::{
     ptr,
     sync::atomic::{AtomicPtr, AtomicUsize, Ordering},
 };
+use log::*;
 use instant::Instant;
 use smallvec::SmallVec;
 use std::time::Duration;
@@ -247,8 +248,11 @@ fn grow_hashtable(num_threads: usize) {
             return;
         }
 
+
+        info!("OLD TABLE!!!!");
         // Lock all buckets in the old table
         for bucket in &table.entries[..] {
+            info!("bucket head: {:?}", bucket.queue_head.get());
             bucket.mutex.lock();
         }
 
@@ -299,6 +303,7 @@ fn grow_hashtable(num_threads: usize) {
 ///
 /// The given `table` must only contain buckets with correctly constructed linked lists.
 unsafe fn rehash_bucket_into(bucket: &'static Bucket, table: &mut HashTable) {
+    info!("rehashing bucket {:?}", bucket.queue_head.get());
     let mut current: *const ThreadData = bucket.queue_head.get();
     while !current.is_null() {
         let next = (*current).next_in_queue.get();
